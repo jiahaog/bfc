@@ -25,8 +25,37 @@ fn parse(inp: &str) -> Result<Vec<Op>, Error> {
         .map(|char| char.try_into())
         .collect()
 }
+fn optimize(mut ops: Vec<Op>) -> Result<Vec<Op>, Error> {
+    let mut stack = vec![];
+    let mut pairs = vec![];
+
+    for (i, op) in ops.iter_mut().enumerate() {
+        if op == &Op::JumpFwd {
+            stack.push(i);
+        } else if op == &Op::JumpBwd {
+            if let Some(open_index) = stack.pop() {
+                assert!(open_index < i);
+                pairs.push((open_index, i));
+            } else {
+                return Err(Error::BracketMismatch);
+            }
+        }
+    }
+
+    for (open_index, close_index) in pairs {
+        ops[open_index] = Op::JumpIfZero(close_index);
+        ops[close_index] = Op::JumpIfNotZero(open_index);
+    }
+
+    if stack.is_empty() {
+        Ok(ops)
+    } else {
+        Err(Error::BracketMismatch)
+    }
+}
 
 fn run(reader: &mut impl Read, writer: &mut impl Write, ops: Vec<Op>) -> Result<(), Error> {
+    let ops = optimize(ops)?;
     let mut reader = reader.bytes();
 
     let mut data = [0 as u8; 30000];
@@ -67,46 +96,17 @@ fn run(reader: &mut impl Read, writer: &mut impl Write, ops: Vec<Op>) -> Result<
                     *current_data = byte.unwrap();
                 }
             }
-            Op::JumpFwd => {
+            Op::JumpIfZero(i) => {
                 if *current_data == 0 {
-                    let mut matching_count = 1 as usize;
-
-                    pc += ops[(pc + 1)..]
-                        .iter()
-                        .position(|op| {
-                            if op == &Op::JumpFwd {
-                                matching_count += 1;
-                                false
-                            } else if op == &Op::JumpBwd {
-                                matching_count -= 1;
-                                matching_count == 0
-                            } else {
-                                false
-                            }
-                        })
-                        .unwrap();
+                    pc = *i;
                 }
             }
-            Op::JumpBwd => {
+            Op::JumpIfNotZero(i) => {
                 if *current_data != 0 {
-                    let mut matching_count = 1 as usize;
-
-                    pc = ops[..pc]
-                        .iter()
-                        .rposition(|op| {
-                            if op == &Op::JumpBwd {
-                                matching_count += 1;
-                                false
-                            } else if op == &Op::JumpFwd {
-                                matching_count -= 1;
-                                matching_count == 0
-                            } else {
-                                false
-                            }
-                        })
-                        .unwrap();
+                    pc = *i;
                 }
             }
+            Op::JumpFwd | Op::JumpBwd => panic!("Should have been optimized away"),
         };
         pc += 1;
     }
@@ -117,6 +117,7 @@ fn run(reader: &mut impl Read, writer: &mut impl Write, ops: Vec<Op>) -> Result<
 enum Error {
     InvalidChar(char),
     IoError(std::io::Error),
+    BracketMismatch,
 }
 
 impl From<std::io::Error> for Error {
@@ -133,6 +134,8 @@ enum Op {
     Dec,
     Write,
     Read,
+    JumpIfZero(usize),
+    JumpIfNotZero(usize),
     JumpFwd,
     JumpBwd,
 }
@@ -201,4 +204,11 @@ mod tests {
     // fn cat() {
     //     interpret("examples/cat.bf");
     // }
+
+    // TODO: Get find some way to terminate these programs.
+    #[test]
+    #[ignore]
+    fn mandelbrot() {
+        interpret("examples/mandelbrot.bf");
+    }
 }
