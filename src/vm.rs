@@ -3,8 +3,6 @@ use crate::op::Op;
 
 use std::io::{Read, Write};
 
-const DEBUGGING: bool = false;
-
 pub(crate) fn run(
     reader: &mut impl Read,
     writer: &mut impl Write,
@@ -17,22 +15,6 @@ pub(crate) fn run(
     let mut pc = 0;
 
     while let Some(op) = ops.get(pc) {
-        if DEBUGGING {
-            println!("========================================");
-            println!("data {:?}", data);
-            println!(
-                "data  {}^{}",
-                std::iter::repeat("   ").take(data_ptr).collect::<String>(),
-                data_ptr
-            );
-            println!("ins {:?}", ops);
-            println!(
-                "ins {}^{}",
-                std::iter::repeat(" ").take(pc).collect::<String>(),
-                pc
-            );
-        }
-
         let current_data = &mut data[data_ptr];
 
         match op {
