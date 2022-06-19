@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     env,
     fs::read_to_string,
     io::{stdin, stdout, Read, Write},
@@ -20,42 +21,62 @@ fn main() {
 const DEBUGGING: bool = false;
 
 fn parse(inp: &str) -> Result<Vec<Op>, Error> {
-    inp.chars()
+    let chars: Vec<char> = inp
+        .chars()
         .filter(|char| matches!(char, '>' | '<' | '+' | '-' | '.' | ',' | '[' | ']'))
-        .map(|char| char.try_into())
+        .collect();
+
+    let jump_table = bracket_jump_table(&chars)?;
+
+    chars
+        .into_iter()
+        .enumerate()
+        .map(|(i, char)| {
+            use Op::*;
+
+            match char {
+                '>' => Ok(PtrInc),
+                '<' => Ok(PtrDec),
+                '+' => Ok(Inc),
+                '-' => Ok(Dec),
+                '.' => Ok(Write),
+                ',' => Ok(Read),
+                '[' => Ok(JumpIfZero(jump_table.get(&i).unwrap().1)),
+                ']' => Ok(JumpIfNotZero(jump_table.get(&i).unwrap().0)),
+                unknown => Err(Error::InvalidChar(unknown)),
+            }
+        })
         .collect()
 }
-fn optimize(mut ops: Vec<Op>) -> Result<Vec<Op>, Error> {
-    let mut stack = vec![];
-    let mut pairs = vec![];
 
-    for (i, op) in ops.iter_mut().enumerate() {
-        if op == &Op::JumpFwd {
+// Returns a mapping of bracket chars to the matching left and right parentheses.
+fn bracket_jump_table(chars: &Vec<char>) -> Result<HashMap<usize, (usize, usize)>, Error> {
+    let mut stack = vec![];
+    let mut pairs = HashMap::new();
+
+    for (i, char) in chars.iter().enumerate() {
+        if char == &'[' {
             stack.push(i);
-        } else if op == &Op::JumpBwd {
+        } else if char == &']' {
             if let Some(open_index) = stack.pop() {
                 assert!(open_index < i);
-                pairs.push((open_index, i));
+                let pair = (open_index, i);
+                pairs.insert(open_index, pair);
+                pairs.insert(i, pair);
             } else {
                 return Err(Error::BracketMismatch);
             }
         }
     }
 
-    for (open_index, close_index) in pairs {
-        ops[open_index] = Op::JumpIfZero(close_index);
-        ops[close_index] = Op::JumpIfNotZero(open_index);
-    }
-
     if stack.is_empty() {
-        Ok(ops)
+        Ok(pairs)
     } else {
         Err(Error::BracketMismatch)
     }
 }
 
 fn run(reader: &mut impl Read, writer: &mut impl Write, ops: Vec<Op>) -> Result<(), Error> {
-    let ops = optimize(ops)?;
     let mut reader = reader.bytes();
 
     let mut data = [0 as u8; 30000];
@@ -106,7 +127,6 @@ fn run(reader: &mut impl Read, writer: &mut impl Write, ops: Vec<Op>) -> Result<
                     pc = *i;
                 }
             }
-            Op::JumpFwd | Op::JumpBwd => panic!("Should have been optimized away"),
         };
         pc += 1;
     }
@@ -126,7 +146,7 @@ impl From<std::io::Error> for Error {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug)]
 enum Op {
     PtrInc,
     PtrDec,
@@ -136,28 +156,6 @@ enum Op {
     Read,
     JumpIfZero(usize),
     JumpIfNotZero(usize),
-    JumpFwd,
-    JumpBwd,
-}
-
-impl TryFrom<char> for Op {
-    type Error = Error;
-
-    fn try_from(value: char) -> Result<Self, Self::Error> {
-        use Op::*;
-
-        match value {
-            '>' => Ok(PtrInc),
-            '<' => Ok(PtrDec),
-            '+' => Ok(Inc),
-            '-' => Ok(Dec),
-            '.' => Ok(Write),
-            ',' => Ok(Read),
-            '[' => Ok(JumpFwd),
-            ']' => Ok(JumpBwd),
-            unknown => Err(Error::InvalidChar(unknown)),
-        }
-    }
 }
 
 #[cfg(test)]
@@ -167,7 +165,8 @@ mod tests {
 
     const CARGO_DIR: &str = env!("CARGO_MANIFEST_DIR");
 
-    fn interpret(path: &str) {
+    // Runs a .bf file at `path` and compares the stdout against `${path}.stdout`.
+    fn test_bf(path: &str) {
         let inp_path: PathBuf = [CARGO_DIR, path].iter().collect();
         let stdin_path: PathBuf = [CARGO_DIR, &format!("{}.stdin", path)].iter().collect();
         let expected_stdout_path: PathBuf =
@@ -191,24 +190,24 @@ mod tests {
 
     #[test]
     fn hello_world() {
-        interpret("examples/hello_world.bf");
+        test_bf("examples/hello_world.bf");
     }
 
     #[test]
     fn bizzfuzz() {
-        interpret("examples/bizzfuzz.bf");
+        test_bf("examples/bizzfuzz.bf");
     }
 
-    // TODO: Get find some way to terminate these programs.
+    // TODO: Get find some way to terminate programs that read from stdin.
     // #[test]
     // fn cat() {
-    //     interpret("examples/cat.bf");
+    //     test_bf("examples/cat.bf");
     // }
 
-    // TODO: Get find some way to terminate these programs.
+    // This test is slow.
     #[test]
     #[ignore]
     fn mandelbrot() {
-        interpret("examples/mandelbrot.bf");
+        test_bf("examples/mandelbrot.bf");
     }
 }
