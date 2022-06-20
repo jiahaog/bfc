@@ -22,7 +22,8 @@ fn main() {
 fn compile(ops: Vec<Op>) -> String {
     let mut ins = String::new();
 
-    for op in ops {
+    // ESI is the data ptr.
+    for (i, op) in ops.into_iter().enumerate() {
         match op {
             Op::PtrInc => ins.push_str("    add esi, 1\n"),
             Op::PtrDec => ins.push_str("    sub esi, 1\n"),
@@ -43,8 +44,22 @@ fn compile(ops: Vec<Op>) -> String {
 ",
             ),
             Op::Read => todo!(),
-            Op::JumpIfZero(_) => todo!(),
-            Op::JumpIfNotZero(_) => todo!(),
+            Op::JumpIfZero(dest) => ins.push_str(&format!(
+                "
+    cmp byte [data_array+esi], 0
+    je jump_dest_{}
+jump_dest_{}:
+            ",
+                dest, i,
+            )),
+            Op::JumpIfNotZero(dest) => ins.push_str(&format!(
+                "
+    cmp byte [data_array+esi], 0
+    jne jump_dest_{}
+jump_dest_{}:
+            ",
+                dest, i,
+            )),
         };
     }
 
@@ -62,7 +77,7 @@ _start:
 
     ; TODO: Remove this.
     ; Emit a done message so we can tell if it is doing anything.
-    mov edx, 13 ; count
+    mov edx, 5 ; count
     mov ecx, done_msg ; buf
     mov ebx, 1 ; fd
     mov eax, 4 ; SYSCALL_WRITE
