@@ -47,7 +47,6 @@ jump_dest_{}:
     format!(
         "
 SECTION .data
-done_msg db 0Ah, 'Done!', 0Ah
 data_array times 30000 dw 0
 
 SECTION .text
@@ -55,14 +54,6 @@ global  _start
 
 _start:
 {}
-
-    ; TODO: Remove this.
-    ; Emit a done message so we can tell if it is doing anything.
-    mov edx, 5 ; count
-    mov ecx, done_msg ; buf
-    mov ebx, 1 ; fd
-    mov eax, 4 ; SYSCALL_WRITE
-    int 80h
 
     mov ebx, 0 ; error_code
     mov eax, 1 ; SYSCALL_EXIT
