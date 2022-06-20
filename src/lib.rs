@@ -1,5 +1,7 @@
-pub mod compiler;
-pub mod error;
-pub mod op;
+mod compiler;
+mod error;
+mod op;
+
 pub mod parser;
+pub mod toolchain;
 pub mod vm;
