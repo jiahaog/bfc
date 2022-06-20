@@ -8,7 +8,7 @@ use std::process::Command;
 use std::{env, fs};
 
 pub fn run(program_path: PathBuf, output_path: PathBuf) -> Result<(), Error> {
-    let program = fs::read_to_string(program_path)?;
+    let program = fs::read_to_string(program_path.clone())?;
 
     let ops = parser::parse(&program)?;
 
@@ -17,7 +17,7 @@ pub fn run(program_path: PathBuf, output_path: PathBuf) -> Result<(), Error> {
     let temp_dir = env::temp_dir().join("bfc");
     fs::create_dir_all(temp_dir.clone())?;
 
-    let file_name = output_path.file_name().unwrap();
+    let file_name = program_path.file_name().unwrap();
 
     let asm_file_path = temp_dir.join(file_name).clone();
     let mut asm_file = fs::File::create(asm_file_path.clone())?;

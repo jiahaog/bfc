@@ -61,7 +61,7 @@ mod tests {
             [CARGO_DIR, &format!("{}.stdout", path)].iter().collect();
 
         let inp = read_to_string(inp_path).unwrap();
-        let stdin = dbg!(read_to_string(stdin_path).unwrap_or_else(|_| "".to_string()));
+        let stdin = read_to_string(stdin_path).unwrap_or_else(|_| "".to_string());
 
         let expected_output = read_to_string(expected_stdout_path).unwrap();
 
