@@ -1,13 +1,10 @@
-mod compiler;
-mod error;
-mod op;
-mod parser;
-
-use crate::error::Error;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs};
+
+use bfc::error::Error;
+use bfc::*;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

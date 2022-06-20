@@ -3,11 +3,7 @@ use crate::op::Op;
 
 use std::io::{Read, Write};
 
-pub(crate) fn run(
-    reader: &mut impl Read,
-    writer: &mut impl Write,
-    ops: Vec<Op>,
-) -> Result<(), Error> {
+pub fn run(reader: &mut impl Read, writer: &mut impl Write, ops: Vec<Op>) -> Result<(), Error> {
     let mut reader = reader.bytes();
 
     let mut data = [0 as u8; 30000];

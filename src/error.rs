@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub(crate) enum Error {
+pub enum Error {
     InvalidChar(char),
     IoError(std::io::Error),
     BracketMismatch,

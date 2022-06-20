@@ -1,6 +1,6 @@
 use crate::op::Op;
 
-pub(crate) fn compile(ops: Vec<Op>) -> String {
+pub fn compile(ops: Vec<Op>) -> String {
     let mut ins = String::new();
 
     // ESI is the data ptr.

@@ -3,7 +3,7 @@ use crate::op::Op;
 
 use std::collections::HashMap;
 
-pub(crate) fn parse(inp: &str) -> Result<Vec<Op>, Error> {
+pub fn parse(inp: &str) -> Result<Vec<Op>, Error> {
     let chars: Vec<char> = inp
         .chars()
         .filter(|char| matches!(char, '>' | '<' | '+' | '-' | '.' | ',' | '[' | ']'))

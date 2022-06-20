@@ -1,7 +1,4 @@
-mod error;
-mod op;
-mod parser;
-mod vm;
+use bfc::*;
 
 use std::{
     env,

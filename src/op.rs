@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub(crate) enum Op {
+pub enum Op {
     PtrInc,
     PtrDec,
     Inc,
