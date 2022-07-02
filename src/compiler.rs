@@ -15,10 +15,6 @@ pub fn compile(ops: Vec<Op>) -> String {
                 let opcode = if offset >= 0 { "add" } else { "sub" };
                 ins.push_str(&format!("    {} esi, {}\n", opcode, offset.abs()));
             }
-            Op::PtrAdd(offset) => ins.push_str(&format!("    add esi, {}\n", offset)),
-            Op::PtrSub(offset) => ins.push_str(&format!("    sub esi, {}\n", offset)),
-            Op::PtrInc => ins.push_str("    add esi, 1\n"),
-            Op::PtrDec => ins.push_str("    sub esi, 1\n"),
             Op::Add(num) => {
                 let opcode = if num >= 0 { "add" } else { "sub" };
                 ins.push_str(&format!(
@@ -27,8 +23,6 @@ pub fn compile(ops: Vec<Op>) -> String {
                     num.abs()
                 ));
             }
-            Op::Inc => ins.push_str("    add byte [data_array+esi], 1\n"),
-            Op::Dec => ins.push_str("    sub byte [data_array+esi], 1\n"),
             Op::Write => ins.push_str(
                 "
     ; Get ready for SYSCALL_WRITE
@@ -74,7 +68,6 @@ jump_dest_{}:
 ",
                 dest, i,
             )),
-            _ => todo!("Unimplemented - remove these opcodes"),
         };
     }
 

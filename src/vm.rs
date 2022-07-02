@@ -22,22 +22,16 @@ pub fn run(reader: &mut impl Read, writer: &mut impl Write, ops: Vec<Op>) -> Res
                     data_ptr -= offset.abs() as usize
                 };
             }
-            Op::PtrAdd(offset) => data_ptr += offset,
-            Op::PtrSub(offset) => data_ptr -= offset,
-            Op::PtrInc => data_ptr += 1,
-            Op::PtrDec => data_ptr -= 1,
             Op::Add(num) => {
                 let num = *num;
+                // For some reason tests like bizzfuzz fail in debug mode (where
+                // overflows result in panics) so wrapping math needs to be used.
                 *current_data = if num >= 0 {
                     current_data.wrapping_add(num as u8)
                 } else {
                     current_data.wrapping_sub(num.abs() as u8)
                 }
             }
-            // For some reason tests like bizzfuzz fail in debug mode (where
-            // overflows result in panics).
-            Op::Inc => *current_data = current_data.wrapping_add(1),
-            Op::Dec => *current_data = current_data.wrapping_sub(1),
             Op::Write => {
                 write!(writer, "{}", *current_data as char)?;
             }
@@ -56,7 +50,6 @@ pub fn run(reader: &mut impl Read, writer: &mut impl Write, ops: Vec<Op>) -> Res
                     pc = *i;
                 }
             }
-            x => panic!("unexpected op {:?}", x),
         };
         pc += 1;
     }
