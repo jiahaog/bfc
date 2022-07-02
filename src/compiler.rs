@@ -19,12 +19,26 @@ pub fn compile(ops: Vec<Op>) -> String {
     add ecx, data_array
 
     mov edx, 1 ; count
-    mov ebx, 1 ; fd
+    mov ebx, 1 ; fd STDOUT_FILENO
     mov eax, 4 ; SYSCALL_WRITE
     int 80h
 ",
             ),
-            Op::Read => todo!(),
+            Op::Read => ins.push_str(&format!(
+                "
+    ; Get ready for SYSCALL_READ
+
+    mov eax, 3 ; SYSCALL_READ
+    mov ebx, 1 ; fd STDIN_FILENO
+
+    ; Point ecx at the element in the data_array
+    mov ecx, data_array ; buf
+    add ecx, esi
+
+    mov edx, 1 ; count
+    int 80h
+            "
+            )),
             Op::JumpIfZero(dest) => ins.push_str(&format!(
                 "
     cmp byte [data_array+esi], 0

@@ -22,6 +22,9 @@ fn mandelbrot() {
     test_bfc("examples/mandelbrot.bf");
 }
 
+// TODO: Write a test that uses stdin.
+// TODO: Consolidate VM implementation and compiler implementation and use a single set of tests.
+
 fn test_bfc(path: &str) {
     let inp_path: PathBuf = [CARGO_DIR, path].iter().collect();
     let expected_stdout_path: PathBuf = [CARGO_DIR, &format!("{}.stdout", path)].iter().collect();
