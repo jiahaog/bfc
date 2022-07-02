@@ -1,6 +1,5 @@
 #[derive(Debug)]
 pub enum Error {
-    InvalidChar(char),
     IoError(std::io::Error),
     BracketMismatch,
 }
