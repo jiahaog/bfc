@@ -1,9 +1,14 @@
 use crate::op::Op;
 
+/// Compiles opcodes into x86 Intel assembly.
 pub fn compile(ops: Vec<Op>) -> String {
     let mut ins = String::new();
 
-    // ESI is the data ptr.
+    // Conventions:
+    //
+    // `data_array` is the bf program buffer.
+    // `esi` is the data ptr that points to an element in `data_array`.
+
     for (i, op) in ops.into_iter().enumerate() {
         match op {
             Op::PtrInc => ins.push_str("    add esi, 1\n"),
@@ -37,14 +42,14 @@ pub fn compile(ops: Vec<Op>) -> String {
 
     mov edx, 1 ; count
     int 80h
-            "
+"
             )),
             Op::JumpIfZero(dest) => ins.push_str(&format!(
                 "
     cmp byte [data_array+esi], 0
     je jump_dest_{}
 jump_dest_{}:
-            ",
+",
                 dest, i,
             )),
             Op::JumpIfNotZero(dest) => ins.push_str(&format!(
@@ -52,7 +57,7 @@ jump_dest_{}:
     cmp byte [data_array+esi], 0
     jne jump_dest_{}
 jump_dest_{}:
-            ",
+",
                 dest, i,
             )),
         };
