@@ -19,7 +19,9 @@ pub fn run(program_path: PathBuf, output_path: PathBuf) -> Result<(), Error> {
 
     let file_name = program_path.file_name().unwrap();
 
-    let asm_file_path = temp_dir.join(file_name).clone();
+    let asm_file_path = temp_dir
+        .join(format!("{}.s", file_name.to_str().unwrap()))
+        .clone();
     let mut asm_file = fs::File::create(asm_file_path.clone())?;
     write!(asm_file, "{}", asm)?;
 
